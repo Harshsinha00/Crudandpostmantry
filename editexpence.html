@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Expense Tracker</h1>
+    <form id="expenseForm">
+      <!-- form fields here -->
+    </form>
+
+    <div id="expenseList" class="expense-list"></div>
+  </div>
+
+  <script>
+    const expenses = [];
+
+    function saveExpense(expense) {
+      axios.post('https://crudcrud.com/api/43495b7314be43198df33eba73eabe63', expense)
+        .then(response => {
+          console.log('Expense saved successfully:', response.data);
+          fetchExpenses();
+        })
+        .catch(error => {
+          console.error('Error saving expense:', error);
+        });
+    }
+
+    function fetchExpenses() {
+      axios.get('https://crudcrud.com/api/43495b7314be43198df33eba73eabe63')
+        .then(response => {
+          expenses.length = 0; 
+          expenses.push(...response.data);
+          renderExpenseList();
+        })
+        .catch(error => {
+          console.error('Error fetching expenses:', error);
+        });
+    }
+
+    function deleteExpenseFromAPI(expenseId) {
+      axios.delete(`https://crudcrud.com/api/43495b7314be43198df33eba73eabe63/${expenseId}`)
+        .then(response => {
+          console.log('Expense deleted successfully:', response.data);
+          fetchExpenses();
+        })
+        .catch(error => {
+          console.error('Error deleting expense:', error);
+        });
+    }
+
+    function editExpenseInAPI(expenseId, updatedExpense) {
+      axios.put(`https://crudcrud.com/api/43495b7314be43198df33eba73eabe63/${expenseId}`, updatedExpense)
+        .then(response => {
+          console.log('Expense updated successfully:', response.data);
+          fetchExpenses();
+        })
+        .catch(error => {
+          console.error('Error updating expense:', error);
+        });
+    }
+
+    function renderExpenseList() {
+      const expenseListElement = document.getElementById('expenseList');
+      expenseListElement.innerHTML = '';
+
+      expenses.forEach((expense, index) => {
+        const { _id, amount, description, category } = expense;
+
+        const expenseItem = document.createElement('div');
+        expenseItem.classList.add('mb-3');
+
+        const itemText = document.createElement('span');
+        itemText.textContent = `Amount: ${amount} | Description: ${description} | Category: ${category}`;
+
+        const editButton = document.createElement('button');
+        editButton.classList.add('btn', 'btn-sm', 'btn-primary', 'me-2');
+        editButton.innerHTML = '<i class="fas fa-edit"></i>';
+        editButton.addEventListener('click', () => populateEditForm(index));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('btn', 'btn-sm', 'btn-danger');
+        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteButton.addEventListener('click', () => deleteExpense(index, _id));
+
+        expenseItem.appendChild(itemText);
+        expenseItem.appendChild(editButton);
+        expenseItem.appendChild(deleteButton);
+        expenseListElement.appendChild(expenseItem);
+      });
+    }
+
+    function populateEditForm(index) {
+      const expense = expenses[index];
+
+      const amountInput = document.getElementById('amount');
+      const descriptionInput = document.getElementById('description');
+      const categoryInput = document.getElementById('category');
+      const submitButton = document.getElementById('submitButton');
+
+      amountInput.value = expense.amount;
+      descriptionInput.value = expense.description;
+      categoryInput.value = expense.category;
+
+      submitButton.textContent = 'Update Expense';
+      submitButton.removeEventListener('click', addExpense);
+      submitButton.addEventListener('click', () => updateExpense(index, expense._id));
+    }
+
+    function updateExpense(index, expenseId) {
+      const amountInput = document.getElementById('amount');
+      const descriptionInput = document.getElementById('description');
+      const categoryInput = document.getElementById('category');
+
+      const updatedExpense = {
+        amount: amountInput.value,
+        description: descriptionInput.value,
+        category: categoryInput.value
+      };
+
+      editExpenseInAPI(expenseId, updatedExpense);
+
+   
+      amountInput.value = '';
+      descriptionInput.value = '';
+      categoryInput.value = 'fuel';
+
+      const submitButton = document.getElementById('submitButton');
+      submitButton.textContent = 'Add Expense';
+      submitButton.removeEventListener('click', updateExpense);
+      submitButton.addEventListener('click', addExpense);
+    }
+
+    function deleteExpense(index, expenseId) {
+      deleteExpenseFromAPI(expenseId);
+    }
+
+    function addExpense(event) {
+      event.preventDefault();
+
+      const amountInput = document.getElementById('amount');
+      const descriptionInput = document.getElementById('description');
+      const categoryInput = document.getElementById('category');
+
+      const expense = {
+        amount: amountInput.value,
+        description: descriptionInput.value,
+        category: categoryInput.value
+      };
+
+      saveExpense(expense);
+
+     
+      amountInput.value = '';
+      descriptionInput.value = '';
+      categoryInput.value = 'fuel';
+    }
+
+    const expenseForm = document.getElementById('expenseForm');
+    expenseForm.addEventListener('submit', addExpense);
+
+    fetchExpenses();
+  </script>
+</body>
+
+</html>
