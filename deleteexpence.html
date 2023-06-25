@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Expense Tracker</h1>
+    <form id="expenseForm">
+      <!-- form fields here -->
+    </form>
+
+    <div id="expenseList" class="expense-list"></div>
+  </div>
+
+  <script>
+    const expenses = [];
+
+    function saveExpense(expense) {
+      axios.post('https://crudcrud.com/api/43495b7314be43198df33eba73eabe63', expense)
+        .then(response => {
+          console.log('Expense saved successfully:', response.data);
+        })
+        .catch(error => {
+          console.error('Error saving expense:', error);
+        });
+    }
+
+    function fetchExpenses() {
+      axios.get('https://crudcrud.com/api/43495b7314be43198df33eba73eabe63')
+        .then(response => {
+          expenses.push(...response.data);
+          renderExpenseList();
+        })
+        .catch(error => {
+          console.error('Error fetching expenses:', error);
+        });
+    }
+
+    function deleteExpenseFromAPI(expenseId) {
+      axios.delete(`https://crudcrud.com/api/43495b7314be43198df33eba73eabe63/${expenseId}`)
+        .then(response => {
+          console.log('Expense deleted successfully:', response.data);
+        })
+        .catch(error => {
+          console.error('Error deleting expense:', error);
+        });
+    }
+
+    function renderExpenseList() {
+      const expenseListElement = document.getElementById('expenseList');
+      expenseListElement.innerHTML = '';
+
+      expenses.forEach((expense, index) => {
+        const { _id, amount, description, category } = expense;
+
+        const expenseItem = document.createElement('div');
+        expenseItem.classList.add('mb-3');
+
+        const itemText = document.createElement('span');
+        itemText.textContent = `Amount: ${amount} | Description: ${description} | Category: ${category}`;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('btn', 'btn-sm', 'btn-danger', 'me-2');
+        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteButton.addEventListener('click', () => deleteExpense(index, _id));
+
+        expenseItem.appendChild(itemText);
+        expenseItem.appendChild(deleteButton);
+        expenseListElement.appendChild(expenseItem);
+      });
+    }
+
+    function addExpense(event) {
+      event.preventDefault();
+
+      const amountInput = document.getElementById('amount');
+      const descriptionInput = document.getElementById('description');
+      const categoryInput = document.getElementById('category');
+
+      const expense = {
+        amount: amountInput.value,
+        description: descriptionInput.value,
+        category: categoryInput.value
+      };
+
+      expenses.push(expense);
+      saveExpense(expense);
+      renderExpenseList();
+
+      amountInput.value = '';
+      descriptionInput.value = '';
+      categoryInput.value = 'fuel';
+    }
+
+    function deleteExpense(index, expenseId) {
+      expenses.splice(index, 1);
+      deleteExpenseFromAPI(expenseId);
+      renderExpenseList();
+    }
+
+    const expenseForm = document.getElementById('expenseForm');
+    expenseForm.addEventListener('submit', addExpense);
+
+    fetchExpenses();
+  </script>
+</body>
+
+</html>
