@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InventoryApp2</title>
+</head>
+<body>
+    <h1>Inventory App</h1>
+    <form onsubmit="showToScreen(event)">
+        <label for="name">Name:</label>
+        <input type="text" id="name"><br><br>
+
+        <label for="description">Description:</label>
+        <input type="text" id="description"><br><br>
+
+        <label for="price">Price:</label>
+        <input type="text" id="price"><br><br>
+
+        <label for="quantity">Quantity:</label>
+        <input type="text" id="quantity"><br><br>
+
+        <button type="submit" class="submit-btn">Add Items</button><br><br>
+    </form>
+    <h3>Items details: </h3>
+    <ul id="inventory"></ul>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+
+
+
+
+<script>
+    // Fetch the data from CRUDCRUD and check the inventory
+    async function fetchInventory() {
+        try {
+            const response = await axios.get('https://crudcrud.com/api/6e922c2a490c44c2be9c5e223fcd1579/datass');
+            const inventory = response.data;
+            const parentEl = document.querySelector('#inventory');
+            parentEl.innerHTML = '';
+
+            inventory.forEach((item) => {
+                const childEl = document.createElement('li');
+                childEl.textContent = `Product: ${item.name} - Description: ${item.description} - Price: ${item.price} - Quantity: ${item.quantity}`;
+
+                const buy1 = document.createElement('input');
+                buy1.type = 'button';
+                buy1.value = 'BUY 1';
+                buy1.addEventListener('click', () => buyOne(item._id, item.name, item.description, item.price, item.quantity));
+
+                const buy2 = document.createElement('input');
+                buy2.type = 'button';
+                buy2.value = 'BUY 2';
+                buy2.addEventListener('click', () => buyTwo(item._id, item.name, item.description, item.price, item.quantity));
+
+                childEl.appendChild(buy1);
+                childEl.appendChild(buy2);
+                parentEl.appendChild(childEl);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Adding items to inventory and reset the form
+    async function showToScreen(event) {
+        event.preventDefault();
+         const name = document.querySelector('#name').value;
+         const description = document.querySelector('#description').value;
+         const price = document.querySelector('#price').value;
+         const quantity = document.querySelector('#quantity').value;
+
+      
+
+        const obj = {
+            name,
+            description,
+            price,
+            quantity
+        };
+
+        try {
+            const response = await axios.post('https://crudcrud.com/api/6e922c2a490c44c2be9c5e223fcd1579/datass', obj);
+            console.log(response);
+             document.querySelector('#name').value = '';
+             document.querySelector('#description').value = '';
+             document.querySelector('#price').value = '';
+             document.querySelector('#quantity').value = '';
+            fetchInventory();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // Buy one and reduce quantity by 1
+    async function buyOne(itemId,itemName, itemDescription, itemPrice, quantity) {
+        if (quantity > 0) {
+            try {
+                await axios.put(`https://crudcrud.com/api/6e922c2a490c44c2be9c5e223fcd1579/datass/${itemId}`, { name:itemName, description:itemDescription, price:itemPrice, quantity: quantity - 1 });
+               
+                fetchInventory();
+                // name=name;
+                //  des=des;
+                //   price=price;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    }
+
+    // Buy two items and reduce the quantity by 2
+    async function buyTwo(itemId,itemName, itemDescription, itemPrice, quantity) {
+        if (quantity >= 2) {
+            try {
+                await axios.put(`https://crudcrud.com/api/6e922c2a490c44c2be9c5e223fcd1579/datass/${itemId}`, {name:itemName, description:itemDescription, price:itemPrice,  quantity: quantity - 2 });
+                
+                fetchInventory();
+                
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    }
+
+    // Fetch the inventory initially
+    fetchInventory();
+</script>
